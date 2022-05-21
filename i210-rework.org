@@ -115,8 +115,8 @@
 
      Use the =ts2phc-TC.cfg= example configuration from linuxptp and
      let the =ts2phc= program synchronize the other cards to the first
-     one.  Run the =ptp4l= in TC mode on all the card's network
-     interfaces.
+     one.  Run the =ptp4l= program in TC mode on all the card's
+     network interfaces.
 
 * Links
 
