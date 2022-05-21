@@ -1,0 +1,138 @@
+#+TITLE:   Accessing the SDPs on the i210
+#+EMAIL:   richardcochran@gmail.com
+#+AUTHOR:  Richard Cochran
+
+* Introduction
+
+  The Intel i210 Ethernet controller features four programmable pins,
+  known as "Software Defined Pins" or SDP.  Two of these pins are
+  routed to a six pin header.  With minimal rework, the card becomes a
+  versatile, inexpensive PTP hardware testing solution.
+
+* Abbreviations
+
+  | DUT | Device Under Test         | PPS | Pulse Per Second        |
+  | GM  | Grand Master              | PTP | Precision Time Protocol |
+  | GPS | Global Positioning System | SDP | Software Defined Pin    |
+  | PC  | Personal Computer         | TC  | Transparent Clock       |
+
+* Pinout of the Six Pin Header
+
+  #+CAPTION: Intel i210 with rework
+  #+NAME: fig:rework
+  #+ATTR_LATEX: center
+  #+ATTR_HTML: :width 400
+  [[./reworked-i210.jpg]]
+
+  The six pin header can be seen in the lower left hand side of Figure
+  [[fig:rework]].  Table [[tab:pinout]] gives the pinout along with
+  the colors of the wires in the photograph.
+
+  #+CAPTION: Six Pin Header
+  #+NAME: tab:pinout
+  | Pin | Signal | Wire Color |
+  |   1 | ?      | -          |
+  |   2 | SDP0   | Orange     |
+  |   3 | GND    | Black      |
+  |   4 | SDP1   | Green      |
+  |   5 | ?      | -          |
+  |   6 | ?      | -          |
+
+* Providing 3.3 Volt Power to a Transceiver
+
+  An RS232 transceiver may be used to electrically isolate the PC from
+  the DUT.  The device shown in Figure [[fig:rs232]] requires power at the
+  same voltage level as the input and output signals.
+  
+  #+CAPTION: NulSom RS232 Transceiver
+  #+NAME: fig:rs232
+  #+ATTR_LATEX: center
+  #+ATTR_HTML: :width 400
+  [[./transceiver.jpg]]
+
+  Unfortunately there is no convenient header from which to obtain
+  3.3 Volt power, and so the rework entails soldering a wire to a
+  capacitor near the voltage regulator, as seen in Figure [[fig:rework]]
+  on the upper right hand side.  Figure [[fig:closeup]] shows a close up
+  view of the solder spot.
+
+  #+CAPTION: 3.3 Volt Power
+  #+NAME: fig:closeup
+  #+ATTR_LATEX: center
+  #+ATTR_HTML: :width 400
+  [[./vcc-close-up.jpg]]
+
+* Application Ideas
+** Single i210
+
+   - PTP device testing
+
+     Connect the transceiver to a another transceiver on a DUT that
+     can produce a 1-PPS signal. Configure SDP1 as an input. Use the
+     PPS time stamps on SDP1 to characterize the DUT synchronization
+     performance as a PTP server and as a PTP client.
+
+   - GPS Grand Master clock
+
+     Connect the transceiver to a another transceiver on the PPS
+     output of a GPS radio.  Configure SDP1 as an input. Use the PPS
+     time stamps on SDP1 to synchronize the i210 to the GPS time.
+
+** Multiple i210 cards
+
+   #+CAPTION: Test Machine with Three Cards
+   #+NAME: fig:threecards
+   #+ATTR_LATEX: center
+   #+ATTR_HTML: :width 400
+   [[./three-cards.jpg]]
+
+   Two or more reworked i210 cards may be installed into one PC.
+   Figure [[fig:threecards]] shows a setup with three cards and a
+   simple adapter to connect their SDP0 pins together directly,
+   without using a transceiver.  This only works when the grounds of
+   the PCIe slots are tied together at the same level.  Some PC
+   motherboards have multiple PCIe buses with different ground levels!
+   Using multiple cards opens up possibilities for additional test
+   applications.
+
+   - PTP network equipment testing
+
+     This method may be used to measure the synchronization
+     performance of multi-port PTP devices such a Boundary Clocks and
+     Transparent Clocks.  Configure SDP0 on the first card as an
+     output and let it generate a PPS output signal.  Configure SDP0
+     on the other cards as inputs.  Run a PTP time server on the first
+     card's interface, and run PTP clients on the others.
+
+     First, connect the cards to the first card individually, using an
+     Ethernet cable directly.  Use the PPS time stamps on the SDP0
+     input to obtain the base line performance.
+
+     Then, connect the cards to the DUT.  Use the PPS time stamps on
+     the SDP0 inputs to measure the time error introduced by the DUT.
+
+   - Transparent Clock
+
+     Configure SDP0 on the first card as an output and let it generate
+     a PPS output signal.  Configure SDP0 on the other cards as
+     inputs.  Use the =ts2phc= program to synchronize the other cards
+     to the first one.  Run the =ptp4l= in TC mode on all the card's
+     network interfaces.
+
+* Links
+
+  Intel i210
+
+  - https://smile.amazon.com/Intel-Corp-I210T1BLK-Retail-Unit/dp/B00C49QC20
+
+  RS-232 Transceiver
+
+  - https://smile.amazon.com/gp/product/B074BMLM11
+
+  - https://www.ti.com/lit/ds/symlink/trs3122e.pdf
+
+#+HTML_HEAD: <style type="text/css"> div { margin-left: 1em; max-width: 40em; } </style>
+#+HTML_HEAD_EXTRA: <style type="text/css"> td { font-family: courier; font-size: 90%; padding: 1pt 10pt 1pt 0pt; } </style>
+#+HTML_HEAD_EXTRA: <style type="text/css"> li { padding-bottom: 0.5em; } </style>
+#+HTML_HEAD_EXTRA: <style type="text/css"> th { font-size: 90%; } </style>
+#+OPTIONS: toc:nil H:2
